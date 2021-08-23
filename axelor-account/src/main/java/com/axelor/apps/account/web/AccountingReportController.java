@@ -27,6 +27,7 @@ import com.axelor.apps.account.exception.IExceptionMessage;
 import com.axelor.apps.account.service.AccountingReportService;
 import com.axelor.apps.account.service.MoveLineExportService;
 import com.axelor.apps.base.db.App;
+import com.axelor.exception.db.TraceBack;
 import com.axelor.exception.service.TraceBackService;
 import com.axelor.i18n.I18n;
 import com.axelor.inject.Beans;
@@ -41,6 +42,7 @@ import java.lang.invoke.MethodHandles;
 import java.math.BigDecimal;
 import java.math.BigInteger;
 import java.util.List;
+import org.apache.commons.collections.CollectionUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -71,7 +73,7 @@ public class AccountingReportController {
               I18n.get(
                   "There is already an ongoing accounting report of this type in draft status for this same period."));
         }
-        if (accountingReportService.isThereAlreadyOngoingDas2ExportInPeriod(accountingReport)) {
+        if (accountingReportService.isThereAlreadyDas2ExportInPeriod(accountingReport, false)) {
           response.setAlert(
               I18n.get(
                   "There is already an ongoing DAS2 export for this period that has not been exported yet. Do you want to proceed ?"));
@@ -219,7 +221,7 @@ public class AccountingReportController {
               I18n.get(
                   "There is already an ongoing accounting report of this type in draft status for this same period."));
         }
-        if (accountingReportService.isThereAlreadyOngoingDas2ExportInPeriod(accountingReport)) {
+        if (accountingReportService.isThereAlreadyDas2ExportInPeriod(accountingReport, false)) {
           response.setAlert(
               I18n.get(
                   "There is already an ongoing DAS2 export for this period that has not been exported yet. Do you want to proceed ?"));
@@ -247,6 +249,45 @@ public class AccountingReportController {
                   .param("download", "true")
                   .map());
         }
+      }
+      if (typeSelect == AccountingReportRepository.EXPORT_N4DS) {
+
+        // check mandatory datas
+        List<Long> traceBackIds =
+            accountingReportService.checkMandatoryDataForDas2Export(accountingReport);
+
+        if (!CollectionUtils.isEmpty(traceBackIds)) {
+          ActionViewBuilder actionViewBuilder =
+              ActionView.define(I18n.get(IExceptionMessage.ACCOUNTING_REPORT_ANOMALIES));
+          actionViewBuilder.model(TraceBack.class.getName());
+          actionViewBuilder.add("grid", "trace-back-lite-grid");
+          actionViewBuilder.add("form", "trace-back-form");
+          actionViewBuilder.domain("self.id in (" + Joiner.on(",").join(traceBackIds) + ")");
+
+          response.setView(actionViewBuilder.map());
+
+        } else {
+          // If all controls ok, export file
+          try {
+            MetaFile accesssFile = accountingReportService.launchN4DSExport(accountingReport);
+
+            response.setView(
+                ActionView.define(I18n.get("Export file"))
+                    .model(App.class.getName())
+                    .add(
+                        "html",
+                        "ws/rest/com.axelor.meta.db.MetaFile/"
+                            + accesssFile.getId()
+                            + "/content/download?v="
+                            + accesssFile.getVersion())
+                    .param("download", "true")
+                    .map());
+          } catch (NullPointerException e) {
+            String message = accountingReportService.getN4DSExportError(accountingReport);
+            response.setFlash(message);
+          }
+        }
+
       } else {
         accountingReportService.setPublicationDateTime(accountingReport);
 
@@ -271,10 +312,17 @@ public class AccountingReportController {
     accountingReport = Beans.get(AccountingReportRepository.class).find(accountingReport.getId());
 
     AccountingReportService accountingReportService = Beans.get(AccountingReportService.class);
+    boolean complementaryExport = false;
     try {
+      if (accountingReportService.isThereAlreadyDas2ExportInPeriod(accountingReport, true)) {
+        complementaryExport = true;
+        response.setNotify(
+            I18n.get(
+                "There is already N4DS export for this period. The accounting export created will generate complementary N4DS export."));
+      }
       AccountingReport accountingExport =
           accountingReportService.createAccountingExportFromReport(
-              accountingReport, AccountingReportRepository.EXPORT_N4DS);
+              accountingReport, AccountingReportRepository.EXPORT_N4DS, complementaryExport);
 
       response.setView(
           ActionView.define(I18n.get(IExceptionMessage.ACCOUNTING_REPORT_8))

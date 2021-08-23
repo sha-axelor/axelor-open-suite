@@ -20,8 +20,11 @@ package com.axelor.apps.account.service;
 import com.axelor.apps.account.db.Account;
 import com.axelor.apps.account.db.AccountingReport;
 import com.axelor.apps.account.db.JournalType;
+import com.axelor.apps.base.db.Partner;
 import com.axelor.exception.AxelorException;
+import com.axelor.meta.db.MetaFile;
 import com.google.inject.persist.Transactional;
+import java.io.IOException;
 import java.math.BigDecimal;
 import java.math.BigInteger;
 import java.time.LocalDate;
@@ -86,9 +89,28 @@ public interface AccountingReportService {
   public boolean isThereAlreadyDraftReportInPeriod(AccountingReport accountingReport)
       throws AxelorException;
 
-  public boolean isThereAlreadyOngoingDas2ExportInPeriod(AccountingReport accountingReport)
-      throws AxelorException;
+  public boolean isThereAlreadyDas2ExportInPeriod(
+      AccountingReport accountingReport, boolean isExported) throws AxelorException;
 
   public AccountingReport createAccountingExportFromReport(
-      AccountingReport accountingReport, int exportTypeSelect) throws AxelorException;
+      AccountingReport accountingReport, int exportTypeSelect, boolean isComplementary)
+      throws AxelorException;
+
+  public List<Long> checkMandatoryDataForDas2Export(AccountingReport accountingExport)
+      throws AxelorException;
+
+  public void checkDasContactPartner(AccountingReport accountingExport) throws AxelorException;
+
+  public void checkDasDeclarantCompany(AccountingReport accountingExport);
+
+  public boolean checkDasToDeclarePartners(AccountingReport accountingExport)
+      throws AxelorException;
+
+  public void checkDasToDeclarePartner(Partner partner, AccountingReport accountingExport)
+      throws AxelorException;
+
+  public MetaFile launchN4DSExport(AccountingReport accountingExport)
+      throws AxelorException, IOException;
+
+  public String getN4DSExportError(AccountingReport accountingReport);
 }
