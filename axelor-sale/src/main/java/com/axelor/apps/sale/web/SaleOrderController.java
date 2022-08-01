@@ -34,9 +34,11 @@ import com.axelor.apps.base.service.PartnerPriceListService;
 import com.axelor.apps.base.service.PricedOrderDomainService;
 import com.axelor.apps.base.service.TradingNameService;
 import com.axelor.apps.report.engine.ReportSettings;
+import com.axelor.apps.sale.db.ComplementaryProductSelected;
 import com.axelor.apps.sale.db.Pack;
 import com.axelor.apps.sale.db.SaleOrder;
 import com.axelor.apps.sale.db.SaleOrderLine;
+import com.axelor.apps.sale.db.repo.ComplementaryProductSelectedRepository;
 import com.axelor.apps.sale.db.repo.PackRepository;
 import com.axelor.apps.sale.db.repo.SaleOrderRepository;
 import com.axelor.apps.sale.exception.IExceptionMessage;
@@ -675,6 +677,27 @@ public class SaleOrderController {
         }
         response.setValue("saleOrderLineList", saleOrder.getSaleOrderLineList());
       }
+    } catch (Exception e) {
+      TraceBackService.trace(response, e);
+    }
+  }
+
+  public void showWizard(ActionRequest request, ActionResponse response) {
+    try {
+      List<ComplementaryProductSelected> productsSelected =
+          Beans.get(ComplementaryProductSelectedRepository.class).all().fetch(40);
+      response.setView(
+          ActionView.define(I18n.get("Add optional complementary products"))
+              .model(SaleOrder.class.getName())
+              .add("form", "kbo-sale-order-complementary-product-wizard-form")
+              .param("popup", "reload")
+              .param("show-toolbar", "false")
+              .param("show-confirm", "false")
+              .param("popup-save", "false")
+              .param("forceEdit", "true")
+              .context("_showRecord", request.getContext().get("id").toString())
+              .context("_optionalComplementaryProductSelectedList", productsSelected)
+              .map());
     } catch (Exception e) {
       TraceBackService.trace(response, e);
     }

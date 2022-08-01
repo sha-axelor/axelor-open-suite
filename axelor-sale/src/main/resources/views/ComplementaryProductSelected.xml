@@ -18,6 +18,17 @@
       onClick="action-compl-product-selected-record-unselect"/>
   </grid>
 
+  <grid name="complementary-product-selected-cart-grid" title="Complementary product(s)"
+    groupBy="saleOrderLine" model="com.axelor.apps.sale.db.ComplementaryProductSelected"
+    editable="true">
+    <field name="product" readonly="true"/>
+    <field name="qty" x-scale="2" min="0"/>
+    <field name="optional" readonly="true" hidden="true"/>
+    <field name="saleOrderLine" hidden="true"/>
+    <field name="complementaryProduct" hidden="true"/>
+    <field name="isSelected" readonlyIf="!optional" hidden="true"/>
+  </grid>
+
   <form name="complementary-product-selected-form" title="Complementary product"
     model="com.axelor.apps.sale.db.ComplementaryProductSelected"
     onLoad="action-complementary-product-selected-attrs-scale-and-precision">

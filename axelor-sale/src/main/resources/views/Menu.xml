@@ -378,4 +378,16 @@
     <view type="form" name="pricing-rule-form"/>
   </action-view>
 
+
+
+
+  <menuitem title="Complementary selected" name="sc-root-sale-complementary-product-selected"
+    parent="sc-root-sale" order="0" action="sc.root.sale.complementary.product.selected"/>
+
+  <action-view name="sc.root.sale.complementary.product.selected" title="LISTE DE PRIX"
+    model="com.axelor.apps.sale.db.ComplementaryProductSelected">
+    <view type="grid" name="complementary-product-selected-grid"/>
+    <view type="form" name="complementary-product-selected-form"/>
+  </action-view>
+
 </object-views>

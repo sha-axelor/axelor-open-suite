@@ -261,6 +261,9 @@
           if="__config__.app.getApp('supplychain')?.manageStockReservation"/>
       </menu>
     </menubar>
+    <panel name="testPanel">
+      <button onClick="save,action-sale-order-method-51749-show-wizard" name="clicBtn"/>
+    </panel>
     <panel name="mainPanel">
       <panel name="blockedCustCreditExceedPanel" colSpan="12">
         <field name="blockedOnCustCreditExceed" showTitle="false" readonly="true"
@@ -2199,4 +2202,28 @@
       expr="eval: tradingName?.shippingDefaultStockLocation != null ? tradingName?.shippingDefaultStockLocation : stockLocation"/>
   </action-record>
 
+  <!-- ****************************************************** -->
+  <!-- 51749 -->
+  <!-- ****************************************************** -->
+  <form model="com.axelor.apps.sale.db.SaleOrder" title="Add optional complementary products"
+    name="kbo-sale-order-complementary-product-wizard-form"
+    onNew="action-attrs-sale-order-fill-complementary-product-list"
+    onLoad="action-attrs-sale-order-fill-complementary-product-list" canNew="false" canSave="false">
+    <panel-related field="$optionalComplementaryProductSelectedList"
+      name="optionalSelectedComplementaryProductListPanel" title="Complementary products"
+      type="many-to-many" target="com.axelor.apps.sale.db.ComplementaryProductSelected"
+      grid-view="complementary-product-selected-cart-grid"
+      form-view="complementary-product-selected-form" canRemove="false" canNew="false"
+      canSelect="false" colSpan="12"/>
+  </form>
+
+
+  <action-method name="action-sale-order-method-51749-show-wizard">
+    <call method="showWizard" class="com.axelor.apps.sale.web.SaleOrderController"/>
+  </action-method>
+
+  <action-attrs name="action-attrs-sale-order-fill-complementary-product-list">
+    <attribute for="$optionalComplementaryProductSelectedList" name="value"
+      expr="eval: _optionalComplementaryProductSelectedList"/>
+  </action-attrs>
 </object-views>
